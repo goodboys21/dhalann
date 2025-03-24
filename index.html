@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bagus CDN Uploader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="bg-white p-6 rounded-lg shadow-lg text-center w-96">
+        <h1 class="text-2xl font-bold text-gray-900">Upload File ke CDN</h1>
+        <input type="file" id="fileInput" class="mt-4">
+        <button id="uploadBtn" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Upload</button>
+        <div id="result" class="mt-4 text-sm"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput').files[0];
+            if (!fileInput) return alert("Pilih file dulu!");
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+
+            const res = await fetch('/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            document.getElementById('result').innerHTML = 
+                data.url ? `<a href="${data.url}" target="_blank">${data.url}</a>` : "Upload gagal!";
+        });
+    </script>
+</body>
+</html>
