@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDN Uploader</title>
+</head>
+<body>
+    <h2>Upload File ke CDN</h2>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+    <p id="fileURL"></p>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) return alert("Pilih file dulu!");
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.error) return alert("Gagal upload: " + data.error);
+
+            document.getElementById("fileURL").innerHTML = 
+                `File URL: <a href="${data.url}" target="_blank">${data.url}</a>`;
+        }
+    </script>
+</body>
+</html>
