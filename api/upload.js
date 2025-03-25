@@ -1,34 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
 import multer from 'multer';
-import express from 'express';
-import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 
-dotenv.config();
-const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-app.post('/upload', upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-        const randomId = Math.random().toString(36).substring(7);
-        const fileExt = req.file.originalname.split('.').pop();
-        const fileName = `${randomId}.${fileExt}`;
+    upload.single('file')(req, res, async (err) => {
+        if (err) return res.status(500).json({ error: 'Upload failed' });
+
+        const { buffer, originalname, mimetype } = req.file;
 
         const { data, error } = await supabase.storage
-            .from('cdn')
-            .upload(`file/${fileName}`, req.file.buffer, { contentType: req.file.mimetype });
+            .from(process.env.BUCKET_NAME)
+            .upload(`uploads/${originalname}`, buffer, { contentType: mimetype });
 
-        if (error) throw error;
+        if (error) return res.status(500).json({ error: error.message });
 
-        return res.json({
-            url: `https://fisrt-one.vercel.app/file/${randomId}`
-        });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-});
+        const { publicURL } = supabase.storage.from(process.env.BUCKET_NAME).getPublicUrl(`uploads/${originalname}`);
 
-export default app;
+        res.json({ url: publicURL });
+    });
+}
